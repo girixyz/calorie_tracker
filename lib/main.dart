@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:calorie_tracker/search_meal_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart'; // The new charting engine
 
@@ -63,12 +60,6 @@ class _RootScreenState extends State<RootScreen> {
     }
   ];
 
-  void _addMeal(Map<String, dynamic> meal) {
-    setState(() {
-      todaysMeals.add(meal);
-    });
-  }
-
   void _removeMeal(int index) {
     setState(() {
       todaysMeals.removeAt(index);
@@ -121,7 +112,7 @@ class HomeScreen extends StatelessWidget {
   final double fatPercent;
   final double fiberPercent;
   final List<Map<String, dynamic>> todaysMeals;
-  final Function(int) onDeleteMeal;
+  final void Function(int) onDeleteMeal;
 
   const HomeScreen(
       {super.key,
