@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:calorie_tracker/search_meal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -123,6 +124,48 @@ class HomeScreen extends StatelessWidget {
       required this.fiberPercent,
       required this.todaysMeals});
 
+  Future<void> _showMealTypePopup(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Track a Meal'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                _mealTypeOption(context, 'Breakfast'),
+                _mealTypeOption(context, 'Lunch'),
+                _mealTypeOption(context, 'Dinner'),
+                _mealTypeOption(context, 'Snacks'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _mealTypeOption(BuildContext context, String mealType) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pop(); // Close the dialog
+        _navigateToSearchScreen(context, mealType);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Text(mealType, style: const TextStyle(fontSize: 18)),
+      ),
+    );
+  }
+
+  void _navigateToSearchScreen(BuildContext context, String mealType) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SearchMealScreen(mealType: mealType),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,9 +256,7 @@ class HomeScreen extends StatelessWidget {
                           ],
                         ),
                         child: IconButton(
-                          onPressed: () {
-                            // TODO: Open Add Meal Screen
-                          },
+                          onPressed: () => _showMealTypePopup(context),
                           icon: const Icon(Icons.add, color: Colors.white, size: 28),
                         ),
                       ),
