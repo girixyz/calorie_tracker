@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart'; // The new charting engine
 
@@ -48,12 +51,21 @@ class _RootScreenState extends State<RootScreen> {
   final double fatPercent = 20;
   final double fiberPercent = 10;
 
-  final List<Map<String, dynamic>> todaysMeals = [
-    {"name": "Masala Chai", "qty": "1 cup (150ml)", "cals": 120, "carbs": 10, "protein": 2, "fat": 5},
-    {"name": "Methi Thepla", "qty": "2 pieces", "cals": 380, "carbs": 45, "protein": 10, "fat": 18},
-    {"name": "Sambhar", "qty": "1 bowl (200g)", "cals": 150, "carbs": 20, "protein": 8, "fat": 4},
-    {"name": "Steamed Rice", "qty": "1 bowl (150g)", "cals": 200, "carbs": 45, "protein": 4, "fat": 1},
-  ];
+  List<Map<String, dynamic>> todaysMeals = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodaysMeals();
+  }
+
+  Future<void> _loadTodaysMeals() async {
+    final String jsonString = await rootBundle.loadString('assets/meals.json');
+    final List<dynamic> jsonResponse = json.decode(jsonString);
+    setState(() {
+      todaysMeals = jsonResponse.map((meal) => meal as Map<String, dynamic>).toList();
+    });
+  }
 
 
   @override

@@ -1,0 +1,59 @@
+
+[
+  {
+    "name": "Masala Chai",
+    "qty": "1 cup (150ml)",
+    "cals": 120,
+    "carbs": 10,
+    "protein": 2,
+    "fat": 5
+  },
+  {
+    "name": "Methi Thepla",
+    "qty": "2 pieces",
+    "cals": 380,
+    "carbs": 45,
+    "protein": 10,
+    "fat": 18
+  },
+  {
+    "name": "Sambhar",
+    "qty": "1 bowl (200g)",
+    "cals": 150,
+    "carbs": 20,
+    "protein": 8,
+    "fat": 4
+  },
+  {
+    "name": "Steamed Rice",
+    "qty": "1 bowl (150g)",
+    "cals": 200,
+    "carbs": 45,
+    "protein": 4,
+    "fat": 1
+  },
+  {
+    "name": "Paneer Butter Masala",
+    "qty": "1 cup (240g)",
+    "cals": 350,
+    "carbs": 12,
+    "protein": 18,
+    "fat": 25
+  },
+  {
+    "name": "Roti",
+    "qty": "1 piece",
+    "cals": 100,
+    "carbs": 20,
+    "protein": 3,
+    "fat": 1
+  },
+  {
+    "name": "Dal Tadka",
+    "qty": "1 bowl (200g)",
+    "cals": 180,
+    "carbs": 25,
+    "protein": 10,
+    "fat": 5
+  }
+]
