@@ -52,22 +52,28 @@ class _RootScreenState extends State<RootScreen> {
   final double fatPercent = 20;
   final double fiberPercent = 10;
 
-  List<Map<String, dynamic>> todaysMeals = [];
+  List<Map<String, dynamic>> todaysMeals = [
+    {
+      "name": "Masala Chai",
+      "qty": "1 cup, 150ml",
+      "cals": 120,
+      "carbs": 10,
+      "protein": 2,
+      "fat": 5
+    }
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTodaysMeals();
-  }
-
-  Future<void> _loadTodaysMeals() async {
-    final String jsonString = await rootBundle.loadString('assets/meals.json');
-    final List<dynamic> jsonResponse = json.decode(jsonString);
+  void _addMeal(Map<String, dynamic> meal) {
     setState(() {
-      todaysMeals = jsonResponse.map((meal) => meal as Map<String, dynamic>).toList();
+      todaysMeals.add(meal);
     });
   }
 
+  void _removeMeal(int index) {
+    setState(() {
+      todaysMeals.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +84,8 @@ class _RootScreenState extends State<RootScreen> {
           proteinPercent: proteinPercent,
           fatPercent: fatPercent,
           fiberPercent: fiberPercent,
-          todaysMeals: todaysMeals),
+          todaysMeals: todaysMeals,
+          onDeleteMeal: _removeMeal),
       MacrosScreen(todaysMeals: todaysMeals),
       const ProfileScreen(),
     ];
@@ -114,6 +121,7 @@ class HomeScreen extends StatelessWidget {
   final double fatPercent;
   final double fiberPercent;
   final List<Map<String, dynamic>> todaysMeals;
+  final Function(int) onDeleteMeal;
 
   const HomeScreen(
       {super.key,
@@ -122,38 +130,38 @@ class HomeScreen extends StatelessWidget {
       required this.proteinPercent,
       required this.fatPercent,
       required this.fiberPercent,
-      required this.todaysMeals});
+      required this.todaysMeals,
+      required this.onDeleteMeal});
 
   Future<void> _showMealTypePopup(BuildContext context) async {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return SimpleDialog(
           title: const Text('Track a Meal'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                _mealTypeOption(context, 'Breakfast'),
-                _mealTypeOption(context, 'Lunch'),
-                _mealTypeOption(context, 'Dinner'),
-                _mealTypeOption(context, 'Snacks'),
-              ],
-            ),
-          ),
+          children: <Widget>[
+            _mealTypeOption(context, 'Breakfast', Icons.free_breakfast),
+            _mealTypeOption(context, 'Lunch', Icons.lunch_dining),
+            _mealTypeOption(context, 'Dinner', Icons.dinner_dining),
+            _mealTypeOption(context, 'Snacks', Icons.fastfood),
+          ],
         );
       },
     );
   }
 
-  Widget _mealTypeOption(BuildContext context, String mealType) {
-    return GestureDetector(
-      onTap: () {
+  Widget _mealTypeOption(BuildContext context, String mealType, IconData icon) {
+    return SimpleDialogOption(
+      onPressed: () {
         Navigator.of(context).pop(); // Close the dialog
         _navigateToSearchScreen(context, mealType);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
-        child: Text(mealType, style: const TextStyle(fontSize: 18)),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: Colors.grey[600]),
+          const SizedBox(width: 16),
+          Text(mealType, style: const TextStyle(fontSize: 18)),
+        ],
       ),
     );
   }
@@ -164,6 +172,141 @@ class HomeScreen extends StatelessWidget {
         builder: (context) => SearchMealScreen(mealType: mealType),
       ),
     );
+  }
+
+  Future<void> _showMealOptionsPopup(
+      BuildContext context, int mealIndex, Map<String, dynamic> meal) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: Text(meal['name']!),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close options dialog
+                _showDeleteConfirmation(context, mealIndex);
+              },
+              child: const Row(
+                  children: [Icon(Icons.delete), SizedBox(width: 8), Text('Delete')]),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // TODO: Implement Edit screen
+              },
+              child: const Row(
+                  children: [Icon(Icons.edit), SizedBox(width: 8), Text('Edit')]),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close options dialog
+                _showInfoPopup(context, meal);
+              },
+              child: const Row(
+                  children: [Icon(Icons.info), SizedBox(width: 8), Text('Info')]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showDeleteConfirmation(
+      BuildContext context, int mealIndex) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Meal'),
+          content: const Text('Are you sure you want to delete this meal?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                onDeleteMeal(mealIndex);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showInfoPopup(
+      BuildContext context, Map<String, dynamic> meal) async {
+    return showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("${meal['name']!} (${meal['qty']!})"),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 150,
+                    child: PieChart(
+                      PieChartData(
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 40,
+                        sections: _buildMealMacroSections(meal),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildLegend(),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  List<PieChartSectionData> _buildMealMacroSections(Map<String, dynamic> meal) {
+    final List<PieChartSectionData> sections = [];
+    if (meal.containsKey('carbs')) {
+      sections.add(PieChartSectionData(
+        value: meal['carbs'].toDouble(),
+        color: Colors.greenAccent.shade700,
+        title: '${meal['carbs']}g',
+        radius: 40,
+      ));
+    }
+    if (meal.containsKey('protein')) {
+      sections.add(PieChartSectionData(
+        value: meal['protein'].toDouble(),
+        color: Colors.orangeAccent,
+        title: '${meal['protein']}g',
+        radius: 40,
+      ));
+    }
+    if (meal.containsKey('fat')) {
+      sections.add(PieChartSectionData(
+        value: meal['fat'].toDouble(),
+        color: Colors.amber,
+        title: '${meal['fat']}g',
+        radius: 40,
+      ));
+    }
+    return sections;
   }
 
   @override
@@ -293,7 +436,7 @@ class HomeScreen extends StatelessWidget {
                   separatorBuilder: (c, i) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final meal = todaysMeals[index];
-                    return _buildMealTile(meal);
+                    return _buildMealTile(context, meal, index);
                   },
                 ),
               ),
@@ -362,47 +505,50 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMealTile(Map<String, dynamic> meal) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50], // Very subtle background
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                meal['name']!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+  Widget _buildMealTile(BuildContext context, Map<String, dynamic> meal, int index) {
+    return GestureDetector(
+      onTap: () => _showMealOptionsPopup(context, index, meal),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[50], // Very subtle background
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  meal['name']!,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                meal['qty']!,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[500],
+                const SizedBox(height: 4),
+                Text(
+                  meal['qty']!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[500],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Text(
-            "${meal['cals']} kcal",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+              ],
             ),
-          ),
-        ],
+            Text(
+              "${meal['cals']} kcal",
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -448,7 +594,7 @@ class MacrosScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            meal['name'],
+                            meal['name']!,
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -458,9 +604,9 @@ class MacrosScreen extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _macroItem(Colors.greenAccent.shade700, "Carbs", meal['carbs']),
-                              _macroItem(Colors.orangeAccent, "Protein", meal['protein']),
-                              _macroItem(Colors.amber, "Fat", meal['fat']),
+                              _macroItem(Colors.greenAccent.shade700, "Carbs", (meal['carbs'] ?? 0) as int),
+                              _macroItem(Colors.orangeAccent, "Protein", (meal['protein'] ?? 0) as int),
+                              _macroItem(Colors.amber, "Fat", (meal['fat'] ?? 0) as int),
                             ],
                           )
                         ],
@@ -475,7 +621,7 @@ class MacrosScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _macroItem(Color color, String label, int value) {
     return Column(
       children: [
